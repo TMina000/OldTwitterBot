@@ -4,26 +4,18 @@ phases:
   install:
     commands:
       - npm install -g typescript
-  pre_build:
-    commands:
-      - echo Logging in to Amazon ECR...
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
-
   build:
     commands:
       - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
       - unzip awscliv2.zip
       - ls -l /root/.pyenv/shims/aws
       - ./aws/install --bin-dir /root/.pyenv/shims --install-dir /usr/local/aws-cli --update
-      - pip3 install -r requirements.txt --target .
-      - echo Build started on `date`
-      - echo Building the Docker image...
-      - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
-      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
-      - echo Build completed on `date`
-      - echo Pushing the Docker image...
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
-  
+      - tsc src/functions/test/index.ts
   post_build:
     commands:
-      - aws lambda update-function-code --function-name painter-style-collection-twitter-bot-lambda --image-uri $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG --publish
+      - aws --version
+      - aws cloudformation package --template-file template.yaml --output-template-file packaged.yaml --s3-bucket test-pipeline-repository
+      - aws cloudformation deploy --template-file packaged.yaml --stack-name testFunction --capabilities CAPABILITY_IAM
+artifacts:
+  files:
+    - packaged.yaml

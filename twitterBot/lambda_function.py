@@ -12,12 +12,11 @@ def lambda_handler(event, context):
         statusCode: 200
 
     """
-    print(event)
-    print("Twitterへの自動投稿処理実行:", event["Twitter"])
+    print("Twitterへの自動投稿処理実行")
     items = dynamodb_operation.get_posted_content(event["Twitter"])
-    can_updated = twitter_operation.post_to_twitter(event["Twitter"], items)
+    can_updated = twitter_operation.post_to_twitter(items)
     dynamodb_operation.complete_post(event["Twitter"], can_updated)
-    print("Twitterへの自動投稿処理終了:", event["Twitter"])
+    print("Twitterへの自動投稿処理終了")
     return {
         'statusCode': 200
     }
